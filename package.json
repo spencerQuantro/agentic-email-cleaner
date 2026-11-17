@@ -1,0 +1,26 @@
+{
+  "name": "agentic-email-cleaner",
+  "private": true,
+  "description": "Sweep: a Claude-powered Gmail cleaner that acts only when it's sure and asks you about the rest.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @sweep/server --filter @sweep/web dev",
+    "dev:demo": "SWEEP_DEMO=1 pnpm dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @sweep/server db:generate",
+    "db:migrate": "pnpm --filter @sweep/server db:migrate"
+  },
+  "devDependencies": {
+    "prettier": "^3.10.1",
+    "typescript": "^5.9.3"
+  }
+}
