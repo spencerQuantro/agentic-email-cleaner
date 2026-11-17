@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+dist/
+coverage/
+docs/designs/
+apps/web/src/routeTree.gen.ts
+apps/server/drizzle/

@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from docs/HANDOFF.md. Usage: bg-surface, text-muted,
+ * border-border-strong, bg-review-bg, text-safe-ink, font-display, ...
+ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+
+  --color-bg: #f6f6f3;
+  --color-surface: #ffffff;
+  --color-surface-muted: #fafaf8;
+  --color-fill-muted: #f4f4f2;
+  --color-border: #e4e4e0;
+  --color-border-strong: #d4d4cf;
+  --color-divider: #f0f0ec;
+
+  --color-ink: #18181b;
+  --color-ink-2: #3f3f46;
+  --color-muted: #52525b;
+  --color-muted-2: #71717a;
+  --color-switch-off: #a1a1aa;
+
+  --color-primary: #1d4ed8;
+  --color-primary-ink: #1e3a8a;
+  --color-primary-soft: #eef2ff;
+  --color-primary-softer: #f5f7ff;
+  --color-primary-avatar: #e0e7ff;
+
+  --color-review-bg: #fffbeb;
+  --color-review-border: #fcd34d;
+  --color-review-chip: #fef3c7;
+  --color-review-ink: #78350f;
+  --color-review-ink-2: #92400e;
+
+  --color-danger-bg: #fee2e2;
+  --color-danger-ink: #991b1b;
+
+  --color-safe-bg: #dcfce7;
+  --color-safe-bg-2: #f0fdf4;
+  --color-safe-border: #bbf7d0;
+  --color-safe-ink: #166534;
+}
+
+@layer base {
+  body {
+    @apply bg-bg font-sans text-sm/[1.45] text-ink antialiased;
+  }
+
+  a {
+    @apply text-primary hover:text-primary-ink;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sweep — Review queue</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1D4ED8}a:hover{color:#1E3A8A}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; min-height: 100vh; background: #F6F6F3; font-family: Inter, system-ui, sans-serif; color: #18181B; font-size: 14px; line-height: 1.45">
+
+  <nav aria-label="Main" style="flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px; padding: 24px 16px; background: #FFFFFF; border-right: 1px solid #E4E4E0; box-sizing: border-box">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 20px">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>
+      <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 20px">Sweep</span>
+    </div>
+    <a href="Main.dc.html" aria-current="page" style="display: flex; justify-content: space-between; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; background: #EEF2FF; color: #1E3A8A; font-weight: 600; text-decoration: none">Review <span style="background: #92400E; color: #FFFFFF; border-radius: 999px; padding: 1px 8px; font-size: 12px">{{pendingCount}}</span></a>
+    <a href="Activity.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; color: #3F3F46; text-decoration: none">Activity</a>
+    <a href="Rules.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; color: #3F3F46; text-decoration: none">Rules &amp; safety</a>
+    <div style="margin-top: auto; padding: 16px 12px 0; border-top: 1px solid #E4E4E0; font-size: 13px; color: #52525B">Connected to<br><span style="color: #18181B; font-weight: 500">you@gmail.com</span></div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; box-sizing: border-box">
+    <div style="max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px">
+
+      <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+        <div>
+          <p style="margin: 0 0 4px; color: #52525B; font-size: 13px">Last run today, 6:00 AM · Next run tomorrow, 6:00 AM</p>
+          <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 600">Needs your review</h1>
+          <p style="margin: 6px 0 0; color: #52525B; max-width: 620px">Sweep handled everything it was sure about. These senders fell below your 95% confidence threshold, so nothing happens until you decide.</p>
+        </div>
+        <button type="button" onClick="{{approveAll}}" style="min-height: 44px; padding: 0 18px; border-radius: 8px; border: none; background: #1D4ED8; color: #FFFFFF; font-weight: 600; font-size: 14px">Approve all suggestions ({{visiblePending}})</button>
+      </header>
+
+      <section aria-label="Last run summary" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+        <div style="background: #FFFFFF; border: 1px solid #E4E4E0; border-radius: 12px; padding: 16px">
+          <div style="font-size: 13px; color: #52525B">Auto-unsubscribed</div>
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; margin-top: 4px">23 <span style="font-size: 14px; font-weight: 500; color: #52525B">senders</span></div>
+          <a href="Activity.dc.html" style="font-size: 13px">View activity</a>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #E4E4E0; border-radius: 12px; padding: 16px">
+          <div style="font-size: 13px; color: #52525B">Moved to Trash</div>
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; margin-top: 4px">418 <span style="font-size: 14px; font-weight: 500; color: #52525B">emails</span></div>
+          <span style="font-size: 13px; color: #52525B">Restorable for 30 days</span>
+        </div>
+        <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 12px; padding: 16px">
+          <div style="font-size: 13px; color: #92400E">Needs review</div>
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; margin-top: 4px; color: #78350F">{{pendingCount}} <span style="font-size: 14px; font-weight: 500">senders</span></div>
+          <span style="font-size: 13px; color: #92400E">Below 95% confidence</span>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #E4E4E0; border-radius: 12px; padding: 16px">
+          <div style="font-size: 13px; color: #52525B">Protected</div>
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; margin-top: 4px">61 <span style="font-size: 14px; font-weight: 500; color: #52525B">emails</span></div>
+          <a href="Rules.dc.html" style="font-size: 13px">Receipts, travel, banks…</a>
+        </div>
+      </section>
+
+      <div role="tablist" aria-label="Filter suggestions" style="display: flex; gap: 8px; flex-wrap: wrap">
+        <sc-for list="{{tabs}}" as="tab" hint-placeholder-count="3">
+          <sc-if value="{{tab.selected}}" hint-placeholder-val="{{false}}">
+            <button type="button" role="tab" aria-selected="true" onClick="{{tab.pick}}" style="min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #18181B; background: #18181B; color: #FFFFFF; font-weight: 500; font-size: 14px">{{tab.label}} · {{tab.count}}</button>
+          </sc-if>
+          <sc-if value="{{tab.unselected}}" hint-placeholder-val="{{true}}">
+            <button type="button" role="tab" aria-selected="false" onClick="{{tab.pick}}" style="min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #D4D4CF; background: #FFFFFF; color: #3F3F46; font-weight: 500; font-size: 14px">{{tab.label}} · {{tab.count}}</button>
+          </sc-if>
+        </sc-for>
+      </div>
+
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+        <sc-for list="{{items}}" as="item" hint-placeholder-count="5">
+          <li style="background: #FFFFFF; border: 1px solid #E4E4E0; border-radius: 12px; padding: 16px 18px">
+            <sc-if value="{{item.pending}}" hint-placeholder-val="{{true}}">
+              <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+                <div aria-hidden="true" style="flex: 0 0 40px; height: 40px; border-radius: 999px; background: #E0E7FF; color: #1E3A8A; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px">{{item.initials}}</div>
+                <div style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+                  <div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px">
+                    <span style="font-weight: 600; font-size: 15px">{{item.sender}}</span>
+                    <span style="color: #52525B; font-size: 13px">{{item.address}} · {{item.volume}}</span>
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+                    <sc-if value="{{item.isUnsub}}" hint-placeholder-val="{{true}}"><span style="background: #EEF2FF; color: #1E3A8A; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600">Suggest: Unsubscribe</span></sc-if>
+                    <sc-if value="{{item.isDelete}}" hint-placeholder-val="{{false}}"><span style="background: #FEE2E2; color: #991B1B; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600">Suggest: Delete {{item.deleteCount}}</span></sc-if>
+                    <span style="background: #FEF3C7; color: #78350F; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600">{{item.conf}}% sure</span>
+                  </div>
+                  <p style="margin: 2px 0 0; color: #3F3F46"><strong style="font-weight: 600">Why I'm unsure:</strong> {{item.reason}}</p>
+                  <sc-if value="{{item.hasDetail}}" hint-placeholder-val="{{false}}"><a href="Detail.dc.html" style="font-size: 13px; font-weight: 500">See emails and more options →</a></sc-if>
+                </div>
+                <div style="flex: 0 1 auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+                  <button type="button" onClick="{{item.keep}}" style="min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #D4D4CF; background: #FFFFFF; color: #18181B; font-weight: 500; font-size: 14px">Keep</button>
+                  <button type="button" onClick="{{item.approve}}" style="min-height: 44px; padding: 0 16px; border-radius: 8px; border: none; background: #1D4ED8; color: #FFFFFF; font-weight: 600; font-size: 14px">{{item.approveLabel}}</button>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{item.resolved}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+                <div style="display: flex; gap: 12px; align-items: center">
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg>
+                  <span><strong style="font-weight: 600">{{item.sender}}</strong> <span style="color: #52525B">— {{item.resolvedLabel}}</span></span>
+                </div>
+                <button type="button" onClick="{{item.undo}}" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: none; background: transparent; color: #1D4ED8; font-weight: 600; font-size: 14px">Undo</button>
+              </div>
+            </sc-if>
+          </li>
+        </sc-for>
+      </ul>
+
+      <sc-if value="{{allDone}}" hint-placeholder-val="{{false}}">
+        <div style="text-align: center; padding: 32px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; color: #166534; font-weight: 500">All caught up. Approved actions run now; anything you kept becomes a signal for next time.</div>
+      </sc-if>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+var SWEEP_ITEMS = [
+  { id: "delta", sender: "Delta Air Lines", initials: "DL", address: "news@e.delta.com", volume: "42 emails / 6 mo", action: "unsubscribe", conf: 62, hasDetail: true,
+    reason: "Mostly promos, but the same domain sends your trip confirmations and boarding passes. I can't tell if they're on separate lists." },
+  { id: "pragmatic", sender: "The Pragmatic Engineer", initials: "PE", address: "pragmaticengineer@substack.com", volume: "26 emails / 6 mo", action: "unsubscribe", conf: 58,
+    reason: "Newsletter, but you opened 9 of the last 12 issues." },
+  { id: "linkedin", sender: "LinkedIn Job Alerts", initials: "in", address: "jobalerts-noreply@linkedin.com", volume: "88 emails / 6 mo", action: "unsubscribe", conf: 54,
+    reason: "High volume, but you've clicked links in 6 alerts this month." },
+  { id: "amazon", sender: "Amazon shipping", initials: "AZ", address: "shipment-tracking@amazon.com", volume: "64 emails / 6 mo", action: "delete", deleteCount: "51 older than 90 days", conf: 81,
+    reason: "Old shipping notices are usually safe to delete, but a few reference orders that may still be returnable." },
+  { id: "pta", sender: "Lincoln Elementary PTA", initials: "PT", address: "news@lincolnpta.org", volume: "19 emails / 6 mo", action: "unsubscribe", conf: 47,
+    reason: "Bulk mailing list, but you've replied to this sender twice." },
+  { id: "costco", sender: "Costco", initials: "CO", address: "costco@online.costco.com", volume: "37 emails / 6 mo", action: "delete", deleteCount: "33 promos", conf: 77,
+    reason: "Promotions are mixed with digital receipts from the same address. I'd keep the 4 receipts." },
+  { id: "github", sender: "GitHub", initials: "GH", address: "notifications@github.com", volume: "212 emails / 6 mo", action: "delete", deleteCount: "190 older than 30 days", conf: 68,
+    reason: "Notifications on repos you own, including security alerts I don't want to remove without asking." }
+];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { decisions: {}, filter: "all" };
+  }
+  decide(id, value) {
+    var next = Object.assign({}, this.state.decisions);
+    if (value) { next[id] = value; } else { delete next[id]; }
+    this.setState({ decisions: next });
+  }
+  renderVals() {
+    var self = this;
+    var d = this.state.decisions;
+    var f = this.state.filter;
+    var visible = SWEEP_ITEMS.filter(function (i) { return f === "all" || i.action === f; });
+    var items = visible.map(function (i) {
+      var dec = d[i.id];
+      var unsub = i.action === "unsubscribe";
+      return Object.assign({}, i, {
+        pending: !dec,
+        resolved: !!dec,
+        isUnsub: unsub,
+        isDelete: !unsub,
+        approveLabel: unsub ? "Unsubscribe" : "Delete",
+        resolvedLabel: dec === "kept" ? "kept, and I'll remember this choice" : (unsub ? "unsubscribed" : "moved to Trash (" + i.deleteCount + ")"),
+        approve: function () { self.decide(i.id, "approved"); },
+        keep: function () { self.decide(i.id, "kept"); },
+        undo: function () { self.decide(i.id, null); }
+      });
+    });
+    var pendingAll = SWEEP_ITEMS.filter(function (i) { return !d[i.id]; });
+    var visiblePending = items.filter(function (i) { return i.pending; });
+    var countFor = function (a) { return SWEEP_ITEMS.filter(function (i) { return (a === "all" || i.action === a) && !d[i.id]; }).length; };
+    var tabs = [["all", "All"], ["unsubscribe", "Unsubscribe"], ["delete", "Delete"]].map(function (t) {
+      return { label: t[1], count: countFor(t[0]), selected: f === t[0], unselected: f !== t[0], pick: function () { self.setState({ filter: t[0] }); } };
+    });
+    return {
+      items: items,
+      tabs: tabs,
+      pendingCount: pendingAll.length,
+      visiblePending: visiblePending.length,
+      allDone: pendingAll.length === 0,
+      approveAll: function () {
+        var next = Object.assign({}, d);
+        visiblePending.forEach(function (i) { next[i.id] = "approved"; });
+        self.setState({ decisions: next });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
