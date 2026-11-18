@@ -115,8 +115,17 @@ export const Session = z.object({
   mode: z.enum(["demo", "live"]),
   connected: z.boolean(),
   email: z.string().nullable(),
+  /** The caller has a valid session, or no password is configured. */
+  signedIn: z.boolean(),
+  /** A password is configured, so the app needs a sign-in. */
+  authRequired: z.boolean(),
 });
 export type Session = z.infer<typeof Session>;
+
+export const LoginRequest = z.object({
+  password: z.string().min(1),
+});
+export type LoginRequest = z.infer<typeof LoginRequest>;
 
 export const RunSummary = z.object({
   lastRunAt: z.string().nullable(),

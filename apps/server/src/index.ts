@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
@@ -74,7 +75,15 @@ async function liveDeps(): Promise<AppDeps> {
 }
 
 const deps = env.SWEEP_DEMO ? demoDeps() : await liveDeps();
-const app = createApp({ ...deps, webOrigin: env.WEB_ORIGIN });
+const auth = env.APP_PASSWORD
+  ? {
+      password: env.APP_PASSWORD,
+      // Live mode always has TOKEN_ENCRYPTION_KEY; demo mode without it signs with a per-start key.
+      signingSecret: env.TOKEN_ENCRYPTION_KEY ?? randomBytes(32).toString("base64"),
+      secure: env.WEB_ORIGIN.startsWith("https:"),
+    }
+  : undefined;
+const app = createApp({ ...deps, webOrigin: env.WEB_ORIGIN, auth });
 
 // In production the server also serves the built web app (single container).
 if (env.WEB_DIST && existsSync(env.WEB_DIST)) {
@@ -82,8 +91,8 @@ if (env.WEB_DIST && existsSync(env.WEB_DIST)) {
   app.get("*", serveStatic({ path: `${env.WEB_DIST}/index.html` }));
 }
 
-serve({ fetch: app.fetch, port: env.PORT }, (info) => {
+serve({ fetch: app.fetch, port: env.PORT, hostname: env.HOST }, (info) => {
   console.log(
-    `Sweep server on http://localhost:${info.port} (${env.SWEEP_DEMO ? "demo" : "live"} mode)`,
+    `Sweep server on http://${env.HOST}:${info.port} (${env.SWEEP_DEMO ? "demo" : "live"} mode)`,
   );
 });

@@ -8,11 +8,15 @@ const flag = z
 const EnvSchema = z.object({
   SWEEP_DEMO: flag,
   PORT: z.coerce.number().int().default(8787),
+  /** Interface the server listens on. Use 0.0.0.0 to accept other machines or containers. */
+  HOST: z.string().default("127.0.0.1"),
   DATABASE_URL: z.string().default("./data/sweep.db"),
   WEB_ORIGIN: z.string().default("http://localhost:5173"),
   /** Directory of the built web app, served in production. */
   WEB_DIST: z.string().optional(),
   TOKEN_ENCRYPTION_KEY: z.string().optional(),
+  /** Shared password for the app. Required in live mode, optional in demo mode. */
+  APP_PASSWORD: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().default("http://localhost:8787/auth/google/callback"),
@@ -40,6 +44,7 @@ export function missingLiveConfig(env: Env): string[] {
     "GOOGLE_CLIENT_SECRET",
     "ANTHROPIC_API_KEY",
     "TOKEN_ENCRYPTION_KEY",
+    "APP_PASSWORD",
   ] as const;
   return required.filter((key) => !env[key]);
 }
