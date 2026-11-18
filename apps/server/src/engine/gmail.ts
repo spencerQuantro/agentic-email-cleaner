@@ -1,5 +1,6 @@
 import { google, type gmail_v1 } from "googleapis";
 import { oneClickUnsubscribe, type MailProvider, type SenderSample } from "./mail";
+import { parseFrom, sentMailQuery } from "./sender-address";
 
 export const GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.modify", "openid", "email"];
 
@@ -21,12 +22,6 @@ function header(msg: gmail_v1.Schema$Message, name: string) {
     msg.payload?.headers?.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value ??
     undefined
   );
-}
-
-function parseFrom(from: string) {
-  const match = from.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/);
-  if (match) return { name: match[1]?.trim() || match[2]!, address: match[2]!.toLowerCase() };
-  return { name: from.trim(), address: from.trim().toLowerCase() };
 }
 
 function httpsUnsubscribeUrl(listUnsubscribe: string | undefined) {
@@ -130,11 +125,10 @@ export class GmailProvider implements MailProvider {
 
     const samples = [...bySender.values()];
     await mapLimit(samples, 5, async (sample) => {
-      const sent = await this.gmail.users.messages.list({
-        userId: "me",
-        q: `in:sent to:${sample.address}`,
-        maxResults: 1,
-      });
+      // Untrusted From header: skip the search for invalid addresses (repliedTo stays false).
+      const q = sentMailQuery(sample.address);
+      if (q === undefined) return;
+      const sent = await this.gmail.users.messages.list({ userId: "me", q, maxResults: 1 });
       sample.repliedTo = (sent.data.messages?.length ?? 0) > 0;
     });
     return samples;
