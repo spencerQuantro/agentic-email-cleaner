@@ -28,6 +28,37 @@ describe("API", () => {
     expect(await res.json()).toHaveLength(fixtures.reviewItems.length);
   });
 
+  it("includes signals on a review item", async () => {
+    const { json } = setup();
+    const res = await json("/review/delta");
+    const body = (await res.json()) as { signals?: unknown[] };
+    expect(body.signals).toHaveLength(4);
+  });
+
+  it("lists a sender's recent emails with only subject, date and classification", async () => {
+    const { json } = setup();
+    const res = await json("/review/delta/emails");
+    expect(res.status).toBe(200);
+    const emails = (await res.json()) as object[];
+    expect(emails).toHaveLength(7);
+    for (const email of emails) {
+      expect(Object.keys(email).sort()).toEqual(["classification", "date", "subject"]);
+    }
+  });
+
+  it("returns no recent emails for a sender without any", async () => {
+    const { json } = setup();
+    const res = await json("/review/pragmatic/emails");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual([]);
+  });
+
+  it("returns 404 for recent emails of an unknown sender", async () => {
+    const { json } = setup();
+    const res = await json("/review/nope/emails");
+    expect(res.status).toBe(404);
+  });
+
   it("approves a delete, then undoes it by restoring from Trash", async () => {
     const { json, mail } = setup();
 

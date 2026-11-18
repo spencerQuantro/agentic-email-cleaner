@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { DecisionRequest, Rules, type Session } from "@sweep/shared";
+import { DecisionRequest, RecentEmails, Rules, type Session } from "@sweep/shared";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
@@ -43,6 +43,11 @@ export function createApp(deps: AppDeps) {
     .get("/review/:id", async (c) => {
       const item = await store.getReviewItem(c.req.param("id"));
       return item ? c.json(item) : c.json({ error: "Not found" }, 404);
+    })
+    .get("/review/:id/emails", async (c) => {
+      const id = c.req.param("id");
+      if (!(await store.getReviewItem(id))) return c.json({ error: "Not found" }, 404);
+      return c.json(RecentEmails.parse(await store.listRecentEmails(id)));
     })
     .post("/review/:id/decision", zValidator("json", DecisionRequest), async (c) => {
       const { decision } = c.req.valid("json");
