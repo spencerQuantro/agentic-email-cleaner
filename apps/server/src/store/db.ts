@@ -107,13 +107,19 @@ export class DbStore implements Store {
     return row ? toEntry(row) : undefined;
   }
 
+  async listRecentEmails(_id: string) {
+    // Live mode does not store per-email detail yet.
+    return [];
+  }
+
   async replacePendingReview(items: PendingReview[]) {
     const now = new Date().toISOString();
     await this.db.transaction(async (tx) => {
       await tx.delete(reviewItems).where(isNull(reviewItems.decision));
       for (const { item, payload } of items) {
+        const { signals: _signals, ...rest } = item;
         const values = {
-          ...item,
+          ...rest,
           deleteCount: item.deleteCount ?? null,
           hasDetail: item.hasDetail ?? false,
           payload,

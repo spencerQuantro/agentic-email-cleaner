@@ -53,6 +53,10 @@ export class MemoryStore implements Store {
     return structuredClone(this.review.find((item) => item.id === id));
   }
 
+  async listRecentEmails(id: string) {
+    return structuredClone(fixtures.recentEmails[id] ?? []);
+  }
+
   private payloads = new Map<string, ActionPayload>(
     fixtures.reviewItems.map((item) => [
       item.id,

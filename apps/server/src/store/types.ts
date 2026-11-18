@@ -2,6 +2,7 @@ import type {
   ActivityRow,
   ActivityRun,
   Decision,
+  RecentEmail,
   ReviewItem,
   Rules,
   RunSummary,
@@ -38,6 +39,7 @@ export interface Store {
 
   listReview(): Promise<ReviewEntry[]>;
   getReviewItem(id: string): Promise<ReviewEntry | undefined>;
+  listRecentEmails(id: string): Promise<RecentEmail[]>;
   /** Replaces all pending items with a fresh set from the latest run. */
   replacePendingReview(items: PendingReview[]): Promise<void>;
   setDecision(id: string, decision: Decision | null): Promise<ReviewEntry | undefined>;

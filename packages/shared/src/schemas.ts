@@ -4,6 +4,13 @@ import { z } from "zod";
 export const SuggestedAction = z.enum(["unsubscribe", "delete"]);
 export type SuggestedAction = z.infer<typeof SuggestedAction>;
 
+/** One piece of evidence for or against the suggested action. */
+export const Signal = z.object({
+  kind: z.enum(["for", "against"]),
+  text: z.string(),
+});
+export type Signal = z.infer<typeof Signal>;
+
 /** A sender waiting in the review queue because confidence was below the threshold. */
 export const ReviewItem = z.object({
   id: z.string(),
@@ -19,8 +26,26 @@ export const ReviewItem = z.object({
   confidence: z.number().int().min(0).max(100),
   reason: z.string(),
   hasDetail: z.boolean().optional(),
+  signals: z.array(Signal).optional(),
 });
 export type ReviewItem = z.infer<typeof ReviewItem>;
+
+export const EmailClassification = z.enum(["trip", "marketing", "unclear"]);
+export type EmailClassification = z.infer<typeof EmailClassification>;
+
+/** One recent email from a sender. Subject, date and classification only; never a body or snippet. */
+export const RecentEmail = z
+  .object({
+    subject: z.string(),
+    /** ISO calendar date, "YYYY-MM-DD". */
+    date: z.iso.date(),
+    classification: EmailClassification,
+  })
+  .strict();
+export type RecentEmail = z.infer<typeof RecentEmail>;
+
+export const RecentEmails = z.array(RecentEmail);
+export type RecentEmails = z.infer<typeof RecentEmails>;
 
 export const Decision = z.enum(["approved", "kept"]);
 export type Decision = z.infer<typeof Decision>;
@@ -80,12 +105,7 @@ export const SenderClassification = z.object({
   action: z.enum(["unsubscribe", "delete", "keep"]),
   confidence: z.number().int().min(0).max(100),
   reason: z.string(),
-  signals: z.array(
-    z.object({
-      kind: z.enum(["for", "against"]),
-      text: z.string(),
-    }),
-  ),
+  signals: z.array(Signal),
   /** Categories Claude detected in the sample, used to apply protection rules. */
   categories: z.array(ProtectedCategory),
 });

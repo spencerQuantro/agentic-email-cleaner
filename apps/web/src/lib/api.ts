@@ -2,6 +2,7 @@ import {
   ActivityRow,
   ActivityRun,
   Decision,
+  RecentEmails,
   ReviewItem,
   Rules,
   RunSummary,
@@ -44,6 +45,7 @@ export const api = {
   summary: () => request(RunSummary, "/summary"),
   review: () => request(z.array(ReviewEntry), "/review"),
   reviewItem: (id: string) => request(ReviewEntry, `/review/${encodeURIComponent(id)}`),
+  recentEmails: (id: string) => request(RecentEmails, `/review/${encodeURIComponent(id)}/emails`),
   decide: (id: string, decision: Decision) =>
     request(ReviewEntry, `/review/${encodeURIComponent(id)}/decision`, {
       method: "POST",

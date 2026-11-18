@@ -137,6 +137,7 @@ Meaning: blue means actions and selection, amber means "needs your decision", gr
 - **Confidence explainer:** amber card. Heading "62% sure you can unsubscribe" with "Auto-act threshold: 95%" on the right, a reason paragraph, and a list of signals prefixed with + or −.
 - **Choice fieldset:** 4 real radio options. The selected option card has a 2px `primary` border and `primary-softer` background; unselected cards have a 1px `border` border. The suggested option carries a "Suggested" badge. Cancel and Apply buttons follow.
 - **Recent emails list:** each row has a classification tag (72px wide, centered) — Trip (green), Marketing (neutral), Unclear (amber) — then the subject and the date. The footer links out to Gmail.
+- **Data note:** the recent-emails list comes from `GET /api/review/:id/emails` and the signals from `ReviewItem.signals`; both are populated only in demo mode for now. "Unsubscribe and delete" is shown disabled until a follow-up adds per-email classification. The suggested unsubscribe option uses generic copy ("Unsubscribe" / "Sends the sender's one-click unsubscribe. This can't be undone.") instead of the mock's "marketing only" wording, because Apply sends a whole-sender one-click unsubscribe.
 
 ### 3. Activity (`Activity.dc.html`)
 

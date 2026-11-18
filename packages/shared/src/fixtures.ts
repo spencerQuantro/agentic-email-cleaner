@@ -1,4 +1,4 @@
-import type { ActivityRun, ReviewItem, Rules, RunSummary } from "./schemas";
+import type { ActivityRun, RecentEmail, ReviewItem, Rules, RunSummary } from "./schemas";
 
 /**
  * Demo data matching the design mocks in docs/designs.
@@ -34,6 +34,12 @@ export const reviewItems: ReviewItem[] = [
     hasDetail: true,
     reason:
       "Mostly promos, but the same domain sends your trip confirmations and boarding passes. I can't tell if they're on separate lists.",
+    signals: [
+      { kind: "for", text: "Has a one-click unsubscribe header (RFC 8058)" },
+      { kind: "for", text: "Gmail labels 36 of them Promotions" },
+      { kind: "against", text: "Same sender domain as your boarding passes" },
+      { kind: "against", text: "You have an upcoming trip in your inbox" },
+    ],
   },
   {
     id: "pragmatic",
@@ -102,6 +108,27 @@ export const reviewItems: ReviewItem[] = [
       "Notifications on repos you own, including security alerts I don't want to remove without asking.",
   },
 ];
+
+/** Recent emails per review item id, for the sender review screen. */
+export const recentEmails: Record<string, RecentEmail[]> = {
+  delta: [
+    { subject: "Check in for your flight to Tokyo", date: "2026-11-12", classification: "trip" },
+    {
+      subject: "Earn bonus miles on your next getaway",
+      date: "2026-11-10",
+      classification: "marketing",
+    },
+    { subject: "Your October SkyMiles summary", date: "2026-11-03", classification: "marketing" },
+    { subject: "Your trip confirmation: SLC → HND", date: "2026-10-28", classification: "trip" },
+    { subject: "Fall into new destinations", date: "2026-10-24", classification: "marketing" },
+    {
+      subject: "Important updates to your SkyMiles account",
+      date: "2026-10-19",
+      classification: "unclear",
+    },
+    { subject: "Members save more this season", date: "2026-10-15", classification: "marketing" },
+  ],
+};
 
 export const activityRuns: ActivityRun[] = [
   {
