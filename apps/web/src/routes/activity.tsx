@@ -33,17 +33,17 @@ function Activity() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] border-collapse">
               <thead>
-                <tr className="text-left text-xs text-muted">
-                  <th scope="col" className="px-[18px] py-2.5 font-semibold">
+                <tr className="text-xs text-muted">
+                  <th scope="col" className="px-[18px] py-2.5 text-left font-semibold">
                     Sender
                   </th>
-                  <th scope="col" className="px-3 py-2.5 font-semibold">
+                  <th scope="col" className="px-3 py-2.5 text-left font-semibold">
                     Action
                   </th>
-                  <th scope="col" className="px-3 py-2.5 font-semibold">
+                  <th scope="col" className="px-3 py-2.5 text-left font-semibold">
                     Why
                   </th>
-                  <th scope="col" className="px-3 py-2.5 font-semibold">
+                  <th scope="col" className="px-3 py-2.5 text-left font-semibold">
                     Decided by
                   </th>
                   <th scope="col" className="px-[18px] py-2.5 text-right font-semibold">
