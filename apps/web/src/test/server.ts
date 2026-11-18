@@ -18,6 +18,7 @@ export const handlers = [
   }),
   http.get("*/api/activity", () => HttpResponse.json(fixtures.activityRuns)),
   http.get("*/api/rules", () => HttpResponse.json(fixtures.defaultRules)),
+  http.put("*/api/rules", async ({ request }) => HttpResponse.json(await request.json())),
 ];
 
 export const server = setupServer(...handlers);
