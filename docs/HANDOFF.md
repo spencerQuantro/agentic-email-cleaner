@@ -146,6 +146,7 @@ Meaning: blue means actions and selection, amber means "needs your decision", gr
 - **Decided by:** green "Auto · NN%" chip or blue "You approved" chip.
 - **Restore** button on delete rows only. After restoring, the action text gets a line-through in `muted` with a green "Restored" label. Unsubscribe rows show "Resubscribe at sender" instead.
 - Wrap the table in `overflow-x: auto` with `min-width: 720px` on the table.
+- **Dry run:** rows from a dry run show a neutral `fill-muted` / `muted` "Dry run" chip after the action text in the Action column, and never a Restore button. The design does not cover this state.
 
 ### 4. Rules & safety (`Rules.dc.html`)
 
