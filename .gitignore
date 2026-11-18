@@ -22,3 +22,7 @@ playwright-report/
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# software factory runtime state
+/factory/jobs/
+/.worktrees/
