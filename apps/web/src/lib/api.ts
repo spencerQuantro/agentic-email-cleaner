@@ -42,6 +42,9 @@ async function request<T>(schema: z.ZodType<T>, path: string, init?: RequestInit
 
 export const api = {
   session: () => request(Session, "/session"),
+  login: (password: string) =>
+    request(Session, "/login", { method: "POST", body: JSON.stringify({ password }) }),
+  logout: () => request(Session, "/logout", { method: "POST" }),
   summary: () => request(RunSummary, "/summary"),
   review: () => request(z.array(ReviewEntry), "/review"),
   reviewItem: (id: string) => request(ReviewEntry, `/review/${encodeURIComponent(id)}`),

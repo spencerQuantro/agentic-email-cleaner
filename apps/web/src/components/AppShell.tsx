@@ -1,11 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { api } from "../lib/api";
 import { sessionQuery, summaryQuery } from "../lib/queries";
 
-function Logo() {
+export function Logo() {
   return (
-    <div className="flex items-center gap-2.5 px-2 pb-5">
+    <span className="flex items-center gap-2.5 px-2 pb-5">
       <svg
         aria-hidden="true"
         width="28"
@@ -22,7 +23,7 @@ function Logo() {
         <path d="M3 7l9 6 9-6" />
       </svg>
       <span className="font-display text-xl font-semibold">Sweep</span>
-    </div>
+    </span>
   );
 }
 
@@ -34,6 +35,15 @@ const navActive = "bg-primary-soft font-semibold text-primary-ink hover:text-pri
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: summary } = useQuery(summaryQuery);
   const { data: session } = useQuery(sessionQuery);
+  const queryClient = useQueryClient();
+  const signOut = useMutation({
+    mutationFn: api.logout,
+    onSuccess: (signedOut) => {
+      // Show the sign-in screen, then drop every cached response so no mail data remains.
+      queryClient.setQueryData(sessionQuery.queryKey, signedOut);
+      queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== "session" });
+    },
+  });
 
   return (
     <div className="flex min-h-screen flex-wrap">
@@ -80,6 +90,16 @@ export function AppShell({ children }: { children: ReactNode }) {
             <a href="/auth/google" className="font-medium">
               Connect Gmail
             </a>
+          )}
+          {session?.authRequired && (
+            <button
+              type="button"
+              onClick={() => signOut.mutate()}
+              disabled={signOut.isPending}
+              className="mt-2 block min-h-11 font-medium text-ink-2 hover:text-ink"
+            >
+              Sign out
+            </button>
           )}
         </div>
       </nav>

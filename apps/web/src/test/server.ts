@@ -5,7 +5,13 @@ import { setupServer } from "msw/node";
 /** Mock API backed by the same fixtures the server's demo mode uses. */
 export const handlers = [
   http.get("*/api/session", () =>
-    HttpResponse.json({ mode: "demo", connected: true, email: "you@gmail.com" }),
+    HttpResponse.json({
+      mode: "demo",
+      connected: true,
+      email: "you@gmail.com",
+      signedIn: true,
+      authRequired: true,
+    }),
   ),
   http.get("*/api/summary", () => HttpResponse.json(fixtures.runSummary)),
   http.get("*/api/review", () =>
