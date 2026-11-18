@@ -87,7 +87,10 @@ function SenderReview() {
       </header>
 
       <div className="flex flex-wrap items-start gap-6">
-        <section aria-label="Decision" className="flex min-w-0 flex-[1_1_440px] flex-col gap-4">
+        <section
+          aria-label="Decision"
+          className="flex max-w-full min-w-0 flex-[1_1_440px] flex-col gap-4"
+        >
           <div className="rounded-xl border border-review-border bg-review-bg p-[18px] text-review-ink">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-[16px] font-semibold">
@@ -263,7 +266,7 @@ function RecentEmailsCard({ emails, address }: { emails: RecentEmail[]; address:
   return (
     <section
       aria-label="Recent emails from this sender"
-      className="min-w-0 flex-[1_1_400px] overflow-hidden rounded-xl border border-border bg-surface"
+      className="max-w-full min-w-0 flex-[1_1_400px] overflow-hidden rounded-xl border border-border bg-surface"
     >
       <div className="flex items-center justify-between gap-3 border-b border-border px-[18px] py-3.5">
         <h2 className="text-[15px] font-semibold">Recent emails</h2>
