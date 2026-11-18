@@ -1,3 +1,5 @@
+import { checkHost, checkUrl, defaultResolver, type Resolver } from "../lib/safe-url";
+
 /** Everything Sweep knows about one sender, gathered from message metadata only. */
 export interface SenderSample {
   address: string;
@@ -34,23 +36,62 @@ export interface MailProvider {
   ): Promise<UnsubscribeResult>;
 }
 
-/** Sends an RFC 8058 one-click unsubscribe request. */
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const MAX_REDIRECTS = 3;
+
+/**
+ * Sends an RFC 8058 one-click unsubscribe request. The URL comes from the sender, so every hop
+ * (including each redirect) must pass `checkUrl` and `checkHost` first. Never throws.
+ */
 export async function oneClickUnsubscribe(
   url: string | undefined,
   oneClick: boolean,
   fetchImpl: typeof fetch = fetch,
+  lookup: Resolver = defaultResolver,
 ): Promise<UnsubscribeResult> {
   if (!url || !oneClick) return { ok: false, reason: "Sender has no one-click unsubscribe" };
-  if (!url.startsWith("https://")) return { ok: false, reason: "Unsubscribe URL is not HTTPS" };
-  const res = await fetchImpl(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: "List-Unsubscribe=One-Click",
-    redirect: "follow",
-  });
-  return res.ok
-    ? { ok: true, method: "one-click" }
-    : { ok: false, reason: `Unsubscribe endpoint returned ${res.status}` };
+  const signal = AbortSignal.timeout(10_000);
+  try {
+    let current = url;
+    for (let redirects = 0; ; redirects++) {
+      const checked = checkUrl(current);
+      if (!checked.ok) return checked;
+      const host = await checkHost(checked.url.hostname, lookup);
+      if (!host.ok) return host;
+      const res = await fetchImpl(checked.url.href, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "List-Unsubscribe=One-Click",
+        redirect: "manual",
+        signal,
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get("location");
+        if (
+          !REDIRECT_STATUSES.has(res.status) ||
+          !location ||
+          !URL.canParse(location, checked.url.href)
+        ) {
+          return { ok: false, reason: "Unsubscribe endpoint returned an invalid redirect" };
+        }
+        if (redirects === MAX_REDIRECTS) {
+          return { ok: false, reason: "Unsubscribe endpoint redirected too many times" };
+        }
+        current = new URL(location, checked.url).href;
+        continue;
+      }
+      return res.ok
+        ? { ok: true, method: "one-click" }
+        : { ok: false, reason: `Unsubscribe endpoint returned ${res.status}` };
+    }
+  } catch (err) {
+    const timedOut =
+      err instanceof DOMException && (err.name === "TimeoutError" || err.name === "AbortError");
+    return {
+      ok: false,
+      reason: timedOut ? "Unsubscribe request timed out" : "Unsubscribe request failed",
+    };
+  }
 }
 
 /** Logs instead of touching a mailbox. Used in demo mode. */
