@@ -42,13 +42,16 @@ describe("Sender review", () => {
     const radios = within(group).getAllByRole("radio");
     expect(radios).toHaveLength(4);
     expect(radios[0]).toBeChecked();
+    expect(radios[0]).toHaveAccessibleName(
+      /^Unsubscribe\s*Suggested\s*Sends the sender's one-click unsubscribe\. This can't be undone\.$/,
+    );
     expect(radios[1]).toBeDisabled();
   });
 
   it("moves the selection with arrow keys, skipping the disabled option", async () => {
     renderRoute("/review/delta");
 
-    const suggested = await screen.findByRole("radio", { name: /Unsubscribe from marketing only/ });
+    const suggested = await screen.findByRole("radio", { name: /^Unsubscribe Suggested/ });
     suggested.focus();
     await userEvent.keyboard("{ArrowDown}");
 

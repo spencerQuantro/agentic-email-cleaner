@@ -133,7 +133,7 @@ function SenderReview() {
                   onChoose={setChoice}
                   title={
                     isUnsubscribe
-                      ? "Unsubscribe from marketing only"
+                      ? "Unsubscribe"
                       : item.deleteCount
                         ? `Delete ${item.deleteCount}`
                         : "Delete these emails"
@@ -141,7 +141,7 @@ function SenderReview() {
                   badge
                   description={
                     isUnsubscribe
-                      ? "Keep trip emails. I'll flag it if they stop arriving."
+                      ? "Sends the sender's one-click unsubscribe. This can't be undone."
                       : "Moved to Trash, restorable for 30 days."
                   }
                 />
