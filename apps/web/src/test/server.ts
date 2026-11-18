@@ -11,6 +11,18 @@ export const handlers = [
   http.get("*/api/review", () =>
     HttpResponse.json(fixtures.reviewItems.map((item) => ({ ...item, decision: null }))),
   ),
+  http.get("*/api/review/:id", ({ params }) => {
+    const item = fixtures.reviewItems.find((i) => i.id === params.id);
+    return item
+      ? HttpResponse.json({ ...item, decision: null })
+      : HttpResponse.json({ error: "Not found" }, { status: 404 });
+  }),
+  http.get("*/api/review/:id/emails", ({ params }) => {
+    const id = String(params.id);
+    return fixtures.reviewItems.some((i) => i.id === id)
+      ? HttpResponse.json(fixtures.recentEmails[id] ?? [])
+      : HttpResponse.json({ error: "Not found" }, { status: 404 });
+  }),
   http.post("*/api/review/:id/decision", async ({ params, request }) => {
     const item = fixtures.reviewItems.find((i) => i.id === params.id);
     const { decision } = (await request.json()) as { decision: string };
@@ -18,6 +30,7 @@ export const handlers = [
   }),
   http.get("*/api/activity", () => HttpResponse.json(fixtures.activityRuns)),
   http.get("*/api/rules", () => HttpResponse.json(fixtures.defaultRules)),
+  http.put("*/api/rules", async ({ request }) => HttpResponse.json(await request.json())),
 ];
 
 export const server = setupServer(...handlers);

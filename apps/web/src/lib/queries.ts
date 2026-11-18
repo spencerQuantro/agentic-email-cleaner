@@ -7,6 +7,8 @@ export const summaryQuery = queryOptions({ queryKey: ["summary"], queryFn: api.s
 export const reviewQuery = queryOptions({ queryKey: ["review"], queryFn: api.review });
 export const reviewItemQuery = (id: string) =>
   queryOptions({ queryKey: ["review", id], queryFn: () => api.reviewItem(id) });
+export const recentEmailsQuery = (id: string) =>
+  queryOptions({ queryKey: ["review", id, "emails"], queryFn: () => api.recentEmails(id) });
 export const activityQuery = queryOptions({ queryKey: ["activity"], queryFn: api.activity });
 export const rulesQuery = queryOptions({ queryKey: ["rules"], queryFn: api.rules });
 
