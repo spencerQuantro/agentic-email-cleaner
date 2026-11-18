@@ -225,15 +225,18 @@ function ChoiceOption({
         checked={choice === value}
         disabled={disabled}
         onChange={() => onChoose(value)}
-        className="mt-[3px] size-[18px] shrink-0"
+        className="mt-[3px] mr-[3px] ml-[5px] size-[18px] shrink-0"
       />
       <span>
         <span className="block font-semibold">
           {title}
           {badge ? (
-            <span className="ml-1 rounded-md bg-primary-avatar px-1.5 py-px text-[12px] font-semibold text-primary-ink">
-              Suggested
-            </span>
+            <>
+              {" "}
+              <span className="ml-1 rounded-md bg-primary-avatar px-1.5 py-px text-[12px] font-semibold text-primary-ink">
+                Suggested
+              </span>
+            </>
           ) : null}
         </span>
         <span className="block text-[13px] text-muted">{description}</span>
