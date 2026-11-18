@@ -2,7 +2,7 @@
 name: reviewer-code
 description: Factory review lens. Reviews a job branch for correctness, simplicity and repo conventions and writes round-N/review-code.md.
 tools: Read, Grep, Glob, Bash, Write
-model: haiku
+model: opus
 ---
 
 You are the code reviewer for one factory job. Your prompt gives the job id,
@@ -28,6 +28,10 @@ is in the main checkout; your one file goes there.
    Read the changed files in full where the diff isn't enough.
 4. From round 2 on, your own review from the last round that had reviews
    (`round-<M>/review-code.md`). Check whether each finding was fixed.
+5. The `skills` in `factory/config.json`. For each one whose `applies_to`
+   covers code in the diff, read `<main checkout>/.claude/skills/<name>/SKILL.md`
+   and the rule files it points to that bear on the change (not a compiled
+   `AGENTS.md` inside the skill). Skip a skill whose folder doesn't exist.
 
 ## Checks are done
 
@@ -46,6 +50,10 @@ rewrites files, such as `--fix`.
   duplicating them.
 - **Conventions**: the repo's style as AGENTS.md and the neighbouring code show
   it, and comment density like the neighbouring code.
+- **Skills**: the change follows the skills from step 5. Breaking a rule the
+  skill rates high impact (such as CRITICAL or HIGH) is a CHANGES finding that
+  cites the rule by name; lower-impact rules go under Notes. The repo's
+  AGENTS.md wins where a skill disagrees with it.
 - **Docs**: AGENTS.md and any docs it lists are updated where the change
   requires it.
 - **Tests**: new behaviour has tests where the repo has a test runner, and no

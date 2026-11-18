@@ -40,6 +40,13 @@ other jobs.
    after the job escalated. Read `decision.md` and every round folder too, so
    you know the history. The feedback comes before the reviews and the spec
    where they disagree.
+6. The `skills` in `factory/config.json`. For each one whose `applies_to`
+   covers code you will write or change, read
+   `<main checkout>/.claude/skills/<name>/SKILL.md`, then the rule files it
+   points to that bear on your change (not a compiled `AGENTS.md` inside the
+   skill). Follow them like the repo's instructions; the repo's `AGENTS.md`
+   wins where they disagree. Skip a skill whose folder doesn't exist. Name the
+   skills you applied in build.md's Summary.
 
 ## Build
 

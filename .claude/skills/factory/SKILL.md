@@ -1,6 +1,6 @@
 ---
 name: factory
-description: Run the software factory on GitHub issues. Use when the user types /factory run, /factory run <n>, or /factory followed by anything else (a question, feedback on a job, or a new feature). The session that runs it becomes the one orchestrator for every job.
+description: Run the software factory on GitHub issues. Use when the user types /factory run, /factory run <n>, /factory dashboard, or /factory followed by anything else (a question, feedback on a job, or a new feature). The session that runs it becomes the one orchestrator for every job.
 ---
 
 # Factory
@@ -15,6 +15,7 @@ tell the user; never work around it.
 ```
 /factory run          drain the queue: every open `factory` issue, `concurrency` at a time; also resumes
 /factory run <n>      run one issue now
+/factory dashboard    open the dashboard of every job in a browser
 /factory <anything>   talk to the factory: ask about jobs, give feedback, file a feature
 ```
 
@@ -48,6 +49,7 @@ through the scripts. `factory/jobs/` is gitignored runtime state.
 <repo>/factory/bin/job                         the only writer of job.json
 <repo>/factory/bin/gate                        runs checks.sh in a worktree → round-N/checks.md
 <repo>/factory/bin/route                       risk + surfaces → the job's agents
+<repo>/factory/bin/dashboard                   serves dashboard.html on localhost and opens it
 <repo>/factory/jobs/<job-id>/job.json          the job's state; the dashboard reads it
 <repo>/factory/jobs/<job-id>/issue.md          the issue, quoted as data
 <repo>/factory/jobs/<job-id>/intake.md         intake's decision, scope, risk, surfaces
@@ -187,6 +189,17 @@ as `resume`: run `factory/bin/job advance <id> intake` and go to **intake**.
 Run one issue with the same steps. If `factory/bin/job queue` shows a job for
 it, resume that job; otherwise `factory/bin/job create <n>`. Finish with the
 summary line for that job.
+
+## /factory dashboard
+
+Run `factory/bin/dashboard`. It starts a local server for `factory/` (bound to
+127.0.0.1, detached, so it keeps running after the command returns) unless one
+is already running, opens the dashboard in the browser, and prints the URL.
+Reply with that URL in one line. `factory/bin/dashboard --stop` stops the
+server; `--no-open` prints the URL without opening a browser; `--port <n>`
+picks the port. The dashboard polls `factory/jobs/`, so it stays live during a
+`/factory run`. Anything else the user says with it (stop it, a port) maps to
+those flags.
 
 ## /factory <anything>
 

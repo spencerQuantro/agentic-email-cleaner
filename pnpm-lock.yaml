@@ -10,7 +10,7 @@ importers:
     devDependencies:
       '@spencerquantro/agent-factory':
         specifier: github:spencerQuantro/agent-factory
-        version: https://codeload.github.com/spencerQuantro/agent-factory/tar.gz/2dff2941006542b5c60386ae14d3d04942313a93
+        version: https://codeload.github.com/spencerQuantro/agent-factory/tar.gz/e932cd6254e829e1deffc68f5d664d68b125e0ee
       prettier:
         specifier: ^3.10.1
         version: 3.10.1
@@ -1227,9 +1227,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@spencerquantro/agent-factory@https://codeload.github.com/spencerQuantro/agent-factory/tar.gz/2dff2941006542b5c60386ae14d3d04942313a93':
-    resolution: {tarball: https://codeload.github.com/spencerQuantro/agent-factory/tar.gz/2dff2941006542b5c60386ae14d3d04942313a93}
-    version: 0.1.0
+  '@spencerquantro/agent-factory@https://codeload.github.com/spencerQuantro/agent-factory/tar.gz/e932cd6254e829e1deffc68f5d664d68b125e0ee':
+    resolution: {tarball: https://codeload.github.com/spencerQuantro/agent-factory/tar.gz/e932cd6254e829e1deffc68f5d664d68b125e0ee}
+    version: 0.4.0
     engines: {node: '>=18.17'}
     hasBin: true
 
@@ -3438,7 +3438,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.68.5':
     optional: true
 
-  '@spencerquantro/agent-factory@https://codeload.github.com/spencerQuantro/agent-factory/tar.gz/2dff2941006542b5c60386ae14d3d04942313a93': {}
+  '@spencerquantro/agent-factory@https://codeload.github.com/spencerQuantro/agent-factory/tar.gz/e932cd6254e829e1deffc68f5d664d68b125e0ee': {}
 
   '@stablelib/base64@1.0.1': {}
 

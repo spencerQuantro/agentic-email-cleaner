@@ -72,8 +72,8 @@ Then add this section if it isn't there:
 `/factory run` builds every open GitHub issue labeled `factory` through
 intake → spec → build → gate → review → approve, one PR per issue. State is in
 `factory/jobs/` (gitignored); `factory/bin/job` is its only writer. Checks:
-`factory/checks.sh`. Dashboard: `cd factory && python3 -m http.server`, then
-open http://localhost:8000/dashboard.html.
+`factory/checks.sh`. Dashboard: `/factory dashboard` (or `factory/bin/dashboard`;
+`--stop` stops it).
 
 Each job works in its own git worktree, a full checkout of the repo at
 `.worktrees/<job-id>` (gitignored). A tool run from the repo root that doesn't
@@ -84,12 +84,23 @@ If the project has tools that scan the repo without reading `.gitignore`
 (some ESLint, Jest, Vitest, TypeScript or Tailwind configs), add `.worktrees/`
 to their ignore lists now.
 
-## 5. Labels
+## 5. Skills
+
+`factory/config.json` `skills` lists Claude skills the builder and the code
+reviewer apply to matching code (by default Vercel's
+`vercel-react-best-practices` for React and Next.js). Run
+`npx agent-factory skills`: it installs each one that applies to this project
+(by its `detect` packages) into `.claude/skills/`. Commit what it adds, along
+with `skills-lock.json` if one appears. Add an entry for any other skill the
+user wants the factory to follow: a name matching its `.claude/skills/<name>/`
+folder, `applies_to` in words, and optionally `detect` and `install`.
+
+## 6. Labels
 
 Run `npx agent-factory labels` (idempotent). It creates `factory`,
 `factory:needs-info` and `factory:needs-human` on GitHub.
 
-## 6. Verify
+## 7. Verify
 
 Run `npx agent-factory doctor --full`. It checks the toolchain, the files,
 agent frontmatter, `config.json`, `.gitignore`, the labels, runs
@@ -98,7 +109,7 @@ Fix anything it reports. If `checks.sh` fails on the current branch, the
 factory can never pass a job: fix the script (not the project) or tell the
 user what's broken.
 
-## 7. Hand over
+## 8. Hand over
 
 Stay on the branch the user is on. Commit the install with a one-line message
 and show the user the diff. Ask before pushing: the factory branches every job
@@ -114,6 +125,8 @@ Then tell the user, in a few lines:
   the factory what to change with `/factory <anything>`.
 - Intake runs on Fable, once per issue. Depending on their plan, Fable can
   bill to usage credits rather than the plan's included usage.
+- `/factory dashboard` opens a live board of every job, its rounds, reviews
+  and cost.
 - To start carefully, set `concurrency` to 1 in `factory/config.json` and read
   every PR until they trust it.
 - `npx agent-factory update` pulls newer factory scripts later. It overwrites
