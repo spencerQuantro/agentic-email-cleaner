@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { DecisionRequest, LoginRequest, RecentEmails, Rules, type Session } from "@sweep/shared";
-import { type Context, Hono } from "hono";
+import { type Context, Hono, type MiddlewareHandler } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
@@ -20,10 +20,24 @@ export interface AppDeps {
   onRulesChanged?: (rules: Rules) => void;
   nextRunAt: (rules: Rules) => Date | null;
   webOrigin?: string;
+  /** Origins allowed to send POST/PUT/PATCH/DELETE to /api. Required so the check can't be skipped. */
+  allowedOrigins: string[];
+  /** Host header values accepted on /api and /auth, to block DNS rebinding. */
+  allowedHosts: string[];
   /** Extra routes mounted at /auth (Google OAuth in live mode). */
   authRoutes?: Hono;
   /** Password protection. Absent means no password is configured and the app is open. */
   auth?: SessionAuthConfig;
+}
+
+/** The origin of an Origin or Referer header, or undefined when it's missing or unparseable. */
+function requestOrigin(header: string | undefined) {
+  if (!header) return undefined;
+  try {
+    return new URL(header).origin;
+  } catch {
+    return undefined;
+  }
 }
 
 export function createApp(deps: AppDeps) {
@@ -105,6 +119,24 @@ export function createApp(deps: AppDeps) {
 
   const app = new Hono();
   app.use("*", logger());
+  const checkHost: MiddlewareHandler = async (c, next) => {
+    const host = c.req.header("Host")?.toLowerCase();
+    if (!host || !deps.allowedHosts.includes(host)) {
+      return c.json({ error: "Host not allowed" }, 403);
+    }
+    await next();
+  };
+  app.use("/api/*", checkHost);
+  app.use("/auth/*", checkHost);
+  app.use("/api/*", async (c, next) => {
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(c.req.method)) {
+      const origin = requestOrigin(c.req.header("Origin") ?? c.req.header("Referer"));
+      if (!origin || !deps.allowedOrigins.includes(origin)) {
+        return c.json({ error: "Cross-site request blocked" }, 403);
+      }
+    }
+    await next();
+  });
   if (deps.webOrigin) app.use("/api/*", cors({ origin: deps.webOrigin }));
   if (auth) {
     app.use("/api/*", auth.middleware);
