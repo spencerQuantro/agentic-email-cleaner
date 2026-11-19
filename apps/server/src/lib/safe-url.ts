@@ -7,7 +7,9 @@ export type Resolver = (hostname: string) => Promise<{ address: string; family: 
 export const defaultResolver: Resolver = (h) => dns.lookup(h, { all: true });
 
 export type UrlCheck = { ok: true; url: URL } | { ok: false; reason: string };
-export type HostCheck = { ok: true } | { ok: false; reason: string };
+/** An address `checkHost` approved; the request connects to exactly this. */
+export type PinnedAddress = { address: string; family: 4 | 6 };
+export type HostCheck = { ok: true; address: PinnedAddress } | { ok: false; reason: string };
 
 const blocked = new BlockList();
 for (const [net, prefix] of [
@@ -17,7 +19,9 @@ for (const [net, prefix] of [
   ["127.0.0.0", 8],
   ["169.254.0.0", 16],
   ["172.16.0.0", 12],
+  ["192.0.0.0", 24],
   ["192.168.0.0", 16],
+  ["198.18.0.0", 15],
   ["224.0.0.0", 4],
   ["240.0.0.0", 4],
 ] as const) {
@@ -61,7 +65,9 @@ export function isBlockedAddress(ip: string): boolean {
   } catch {
     return true;
   }
-  const mapped = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(normalised);
+  // IPv4-compatible (::a.b.c.d), IPv4-mapped (::ffff:a.b.c.d) and IPv4-translated
+  // (::ffff:0:a.b.c.d) addresses are checked by their embedded IPv4.
+  const mapped = /^::(?:ffff:(?:0:)?)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(normalised);
   if (mapped) {
     const hi = parseInt(mapped[1]!, 16);
     const lo = parseInt(mapped[2]!, 16);
@@ -70,14 +76,21 @@ export function isBlockedAddress(ip: string): boolean {
   return blocked.check(normalised, "ipv6");
 }
 
-/** Allows a host only when it, or every address it resolves to, is public. */
+/**
+ * Allows a host only when it, or every address it resolves to, is public. On success it returns
+ * the checked address, and the request must connect to exactly that address (pinned) so the host
+ * can't be re-resolved to an internal one after the check.
+ */
 export async function checkHost(hostname: string, lookup: Resolver): Promise<HostCheck> {
   const bare = hostname.startsWith("[") ? hostname.slice(1, -1) : hostname;
   const internal: HostCheck = {
     ok: false,
     reason: "Unsubscribe URL points to a private or internal address",
   };
-  if (isIP(bare)) return isBlockedAddress(bare) ? internal : { ok: true };
+  const family = isIP(bare);
+  if (family === 4 || family === 6) {
+    return isBlockedAddress(bare) ? internal : { ok: true, address: { address: bare, family } };
+  }
   let addresses: { address: string }[];
   try {
     addresses = await lookup(bare);
@@ -85,5 +98,7 @@ export async function checkHost(hostname: string, lookup: Resolver): Promise<Hos
     return { ok: false, reason: "Could not resolve unsubscribe host" };
   }
   if (addresses.length === 0) return { ok: false, reason: "Could not resolve unsubscribe host" };
-  return addresses.some((a) => isBlockedAddress(a.address)) ? internal : { ok: true };
+  if (addresses.some((a) => isBlockedAddress(a.address))) return internal;
+  const first = addresses[0]!.address;
+  return { ok: true, address: { address: first, family: isIP(first) === 6 ? 6 : 4 } };
 }
