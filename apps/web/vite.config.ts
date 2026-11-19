@@ -19,8 +19,9 @@ export default defineConfig({
     port: Number(process.env.WEB_PORT) || 5173,
     strictPort: true,
     proxy: {
-      "/api": apiOrigin,
-      "/auth": apiOrigin,
+      // changeOrigin forwards Host as 127.0.0.1:<API_PORT>, which the server's Host allowlist accepts.
+      "/api": { target: apiOrigin, changeOrigin: true },
+      "/auth": { target: apiOrigin, changeOrigin: true },
     },
   },
   test: {
