@@ -59,6 +59,8 @@ Sweep is self-hosted: you bring your own Google OAuth client and Anthropic API k
 
 The server listens on `HOST`, which defaults to `127.0.0.1` so only your own machine can reach it. Set `HOST=0.0.0.0` only when other machines or containers need to connect, and keep `APP_PASSWORD` set when you do.
 
+The API only answers requests whose `Host` is the host of `WEB_ORIGIN` or `GOOGLE_REDIRECT_URI`, `localhost:<PORT>` or `127.0.0.1:<PORT>`, and only accepts changes from the `WEB_ORIGIN` origin or the server's own `localhost`/`127.0.0.1` origin. If you open the app at another address, such as a LAN hostname, set `WEB_ORIGIN` to that origin; add any other hostnames the server is reached by to `ALLOWED_HOSTS` (comma-separated, for example `ALLOWED_HOSTS=sweep.lan:8787`).
+
 Start with **Dry run** switched on in Rules & safety and check the Activity log before letting Sweep act for real.
 
 ### Docker
