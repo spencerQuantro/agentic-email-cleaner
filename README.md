@@ -54,8 +54,10 @@ Open http://localhost:5173.
 Sweep is self-hosted: you bring your own Google OAuth client and Anthropic API key, and your mail never passes through anyone else's server.
 
 1. In Google Cloud Console, create a project, enable the **Gmail API**, and create an **OAuth client ID** (Web application) with redirect URI `http://localhost:8787/auth/google/callback`. Leave the consent screen in **Testing** mode and add your own address as a test user. A personal-use app in Testing mode doesn't need Google's verification.
-2. Copy `.env.example` to `.env`, set `SWEEP_DEMO=0`, and fill in the Google client, your `ANTHROPIC_API_KEY`, and a `TOKEN_ENCRYPTION_KEY` (`openssl rand -base64 32`).
+2. Copy `.env.example` to `.env`, set `SWEEP_DEMO=0`, and fill in the Google client, your `ANTHROPIC_API_KEY`, a `TOKEN_ENCRYPTION_KEY` (`openssl rand -base64 32`), and an `APP_PASSWORD` you'll use to sign in to the app.
 3. `pnpm dev`, open the app, and click **Connect Gmail**.
+
+The server listens on `HOST`, which defaults to `127.0.0.1` so only your own machine can reach it. Set `HOST=0.0.0.0` only when other machines or containers need to connect, and keep `APP_PASSWORD` set when you do.
 
 Start with **Dry run** switched on in Rules & safety and check the Activity log before letting Sweep act for real.
 
@@ -65,6 +67,8 @@ Start with **Dry run** switched on in Rules & safety and check the Activity log 
 docker build -t sweep .
 docker run -p 8787:8787 --env-file .env -v sweep-data:/app/data sweep
 ```
+
+The image sets `HOST=0.0.0.0` so the published port works. `APP_PASSWORD` must be in the env file; live mode won't start without it.
 
 ## Development
 

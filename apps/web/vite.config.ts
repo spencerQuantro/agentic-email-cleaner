@@ -4,7 +4,8 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-const apiOrigin = `http://localhost:${Number(process.env.API_PORT) || 8787}`;
+// 127.0.0.1, not localhost: the server binds to IPv4 loopback and localhost may resolve to ::1.
+const apiOrigin = `http://127.0.0.1:${Number(process.env.API_PORT) || 8787}`;
 
 export default defineConfig({
   plugins: [

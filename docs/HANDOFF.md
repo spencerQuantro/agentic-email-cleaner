@@ -116,6 +116,8 @@ Meaning: blue means actions and selection, amber means "needs your decision", gr
 
 ## Screens
 
+The sign-in screen (shown in place of any page when `APP_PASSWORD` is set and you're signed out) has no design file. It is built from the existing card, input and primary-button styles.
+
 ### 1. Review queue (`Main.dc.html`)
 
 - **Header:** run meta line, h1 "Needs your review", description, and the primary button "Approve all suggestions (n)", where n is the pending count in the current filter.

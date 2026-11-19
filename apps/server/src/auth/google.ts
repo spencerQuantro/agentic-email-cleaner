@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { getCookie, setCookie } from "hono/cookie";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { Db } from "../db/client";
 import { oauthTokens } from "../db/schema";
 import {
@@ -36,6 +36,7 @@ export async function gmailFromStoredToken(deps: GoogleAuthDeps) {
 
 /** /auth/google → Google consent screen → /auth/google/callback → back to the app. */
 export function googleAuthRoutes(deps: GoogleAuthDeps) {
+  const secure = deps.webOrigin.startsWith("https:");
   return new Hono()
     .get("/google", (c) => {
       const state = randomBytes(16).toString("hex");
@@ -44,6 +45,7 @@ export function googleAuthRoutes(deps: GoogleAuthDeps) {
         sameSite: "Lax",
         maxAge: 600,
         path: "/",
+        secure,
       });
       const url = createOAuthClient(deps.oauth).generateAuthUrl({
         access_type: "offline",
@@ -56,7 +58,9 @@ export function googleAuthRoutes(deps: GoogleAuthDeps) {
     .get("/google/callback", async (c) => {
       const code = c.req.query("code");
       const state = c.req.query("state");
-      if (!code || !state || state !== getCookie(c, "oauth_state")) {
+      const expected = getCookie(c, "oauth_state");
+      deleteCookie(c, "oauth_state", { path: "/", secure });
+      if (!code || !state || state !== expected) {
         return c.text("Invalid OAuth callback", 400);
       }
 

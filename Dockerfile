@@ -16,6 +16,7 @@ FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8787 \
+    HOST=0.0.0.0 \
     DATABASE_URL=/app/data/sweep.db \
     WEB_DIST=/app/web
 COPY --from=build /out/node_modules ./node_modules
