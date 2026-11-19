@@ -182,6 +182,49 @@ describe("password protection", () => {
     expect(header).toContain("Max-Age=0");
   });
 
+  it("revokes the session cookie on logout", async () => {
+    const { json, login } = setup();
+    const cookie = sessionCookie(await login("hunter2"))!;
+    expect(
+      (await json("/api/logout", { method: "POST", headers: { Cookie: cookie } })).status,
+    ).toBe(200);
+    expect((await json("/api/rules", { headers: { Cookie: cookie } })).status).toBe(401);
+    const session = await (await json("/api/session", { headers: { Cookie: cookie } })).json();
+    expect(session).toMatchObject({ signedIn: false });
+  });
+
+  it("signs out every session on logout", async () => {
+    vi.useFakeTimers();
+    const { json, login } = setup();
+    const first = sessionCookie(await login("hunter2"))!;
+    vi.advanceTimersByTime(1000);
+    const second = sessionCookie(await login("hunter2"))!;
+    expect(first).not.toBe(second);
+
+    await json("/api/logout", { method: "POST", headers: { Cookie: first } });
+    expect((await json("/api/rules", { headers: { Cookie: second } })).status).toBe(401);
+  });
+
+  it("does not revoke anything on a logout without a valid session", async () => {
+    const { json, login } = setup();
+    const cookie = sessionCookie(await login("hunter2"))!;
+    const value = decodeURIComponent(cookie.slice("sweep_session=".length));
+    const dot = value.lastIndexOf(".");
+    const tampered = `sweep_session=${encodeURIComponent(`${Number(value.slice(0, dot)) + 1}${value.slice(dot)}`)}`;
+
+    await json("/api/logout", { method: "POST" });
+    await json("/api/logout", { method: "POST", headers: { Cookie: tampered } });
+    expect((await json("/api/rules", { headers: { Cookie: cookie } })).status).toBe(200);
+  });
+
+  it("signs in again after logout", async () => {
+    const { json, login } = setup();
+    const old = sessionCookie(await login("hunter2"))!;
+    await json("/api/logout", { method: "POST", headers: { Cookie: old } });
+    const cookie = sessionCookie(await login("hunter2"))!;
+    expect((await json("/api/rules", { headers: { Cookie: cookie } })).status).toBe(200);
+  });
+
   it("leaves everything open when no password is configured", async () => {
     const { json } = setup(null);
     expect(await (await json("/api/session")).json()).toEqual({

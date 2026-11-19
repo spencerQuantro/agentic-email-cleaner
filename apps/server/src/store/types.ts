@@ -54,4 +54,9 @@ export interface Store {
 
   recordKeep(address: string): Promise<void>;
   keptSenders(): Promise<string[]>;
+
+  /** Part of the session cookie key. Bumping it revokes every issued cookie. */
+  getSessionGeneration(): Promise<number>;
+  /** Changes the stored generation; returns the new value. */
+  bumpSessionGeneration(): Promise<number>;
 }

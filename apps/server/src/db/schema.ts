@@ -7,6 +7,8 @@ export const settings = sqliteTable("settings", {
   rules: text("rules", { mode: "json" }).$type<Rules>().notNull(),
   lastRunAt: text("last_run_at"),
   lastRunStats: text("last_run_stats", { mode: "json" }).$type<LastRunStats>(),
+  /** Mixed into the session cookie key; bumped on sign-out to revoke every cookie. */
+  sessionGeneration: integer("session_generation").notNull().default(0),
 });
 
 export interface ReviewPayload {

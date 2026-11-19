@@ -3,17 +3,22 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fixtures } from "@sweep/shared";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createDb, runMigrations } from "../db/client";
+import { createApp } from "../app";
+import { connectedAccount } from "../auth/google";
+import { createDb, runMigrations, type Db } from "../db/client";
+import { oauthTokens } from "../db/schema";
+import { FakeMail } from "../test/fakes";
 import { DbStore } from "./db";
 
 describe("DbStore", () => {
   let dir: string;
+  let db: Db;
   let store: DbStore;
 
   beforeEach(async () => {
     // A temp file rather than :memory:, because libSQL transactions open a new connection.
     dir = mkdtempSync(join(tmpdir(), "sweep-"));
-    const db = createDb(join(dir, "test.db"));
+    db = createDb(join(dir, "test.db"));
     await runMigrations(db);
     store = new DbStore(db);
   });
@@ -72,5 +77,44 @@ describe("DbStore", () => {
     await store.recordKeep("News@Example.com");
     await store.recordKeep("news@example.com");
     expect(await store.keptSenders()).toEqual(["news@example.com"]);
+  });
+
+  it("persists the session generation", async () => {
+    expect(await store.getSessionGeneration()).toBe(0);
+    expect(await store.bumpSessionGeneration()).toBe(1);
+    expect(await store.getSessionGeneration()).toBe(1);
+    expect(await new DbStore(createDb(join(dir, "test.db"))).getSessionGeneration()).toBe(1);
+  });
+
+  it("leaves the Gmail token alone on logout", async () => {
+    await db.insert(oauthTokens).values({
+      id: 1,
+      email: "you@gmail.com",
+      encryptedRefreshToken: "encrypted",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    const before = await connectedAccount(db);
+    const mail = new FakeMail();
+    const app = createApp({
+      store,
+      getMail: async () => mail,
+      session: async () => ({ mode: "live", connected: true, email: "you@gmail.com" }),
+      nextRunAt: () => null,
+      auth: { password: "hunter2", signingSecret: "secret", secure: false },
+    });
+    const login = await app.request("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: "hunter2" }),
+    });
+    const cookie = login.headers.getSetCookie()[0]!.split(";")[0]!;
+    const logout = await app.request("/api/logout", {
+      method: "POST",
+      headers: { Cookie: cookie },
+    });
+
+    expect(logout.status).toBe(200);
+    expect(await connectedAccount(db)).toEqual(before);
+    expect(await store.getSessionGeneration()).toBe(1);
   });
 });

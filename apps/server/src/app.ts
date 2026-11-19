@@ -49,7 +49,12 @@ export function createApp(deps: AppDeps) {
     return mail;
   };
 
-  const auth = deps.auth && createSessionAuth(deps.auth);
+  const auth =
+    deps.auth &&
+    createSessionAuth(deps.auth, {
+      get: () => store.getSessionGeneration(),
+      bump: () => store.bumpSessionGeneration(),
+    });
 
   /** The session as the caller sees it: signed-out callers learn nothing about the account. */
   const sessionFor = async (signedIn: boolean): Promise<Session> => {
@@ -70,7 +75,7 @@ export function createApp(deps: AppDeps) {
       return c.json(await sessionFor(true));
     })
     .post("/logout", async (c) => {
-      auth?.logout(c);
+      await auth?.logout(c);
       return c.json(await sessionFor(false));
     })
     .get("/summary", async (c) => {
