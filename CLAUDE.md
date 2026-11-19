@@ -28,6 +28,7 @@ Fresh checkout: `corepack enable && pnpm install`. No env file is needed for dem
   - The confidence threshold is enforced in `decide()` (plain code), never in a prompt.
   - Only headers, subjects and short snippets go to Claude, never full message bodies.
   - Dry-run mode must not call any mutating Gmail method or unsubscribe endpoint.
+  - The server only requests a sender-controlled URL through `oneClickUnsubscribe`'s checks: https, port 443, no credentials, no private or internal addresses, and every redirect re-checked.
 - All API responses are validated on the client with the shared zod schemas (`apps/web/src/lib/api.ts`). Add new endpoints to `packages/shared` first.
 - UI: match `docs/designs` exactly; use the theme tokens in `apps/web/src/styles.css` (e.g. `bg-review-bg`), not raw hex. Real `<button>`/`<a>`/`<label>` elements, 44px minimum touch targets, visible focus ring.
 - Tests use fakes (`apps/server/src/test/fakes.ts`, MSW in `apps/web/src/test/server.ts`); never hit real Gmail or Anthropic in tests.

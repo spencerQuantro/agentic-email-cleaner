@@ -20,6 +20,7 @@ Gmail metadata ──► free checks ──► Claude (only if still unsure) ─
 - **No permanent deletes.** "Delete" moves mail to Gmail Trash, which Gmail keeps for 30 days, and every delete can be restored from the Activity screen.
 - **Protected categories** (receipts, banks, travel, security alerts, people you've emailed, starred) are never touched or suggested.
 - **Dry-run mode** logs what Sweep would do without doing it.
+- **Unsubscribe links stay public.** Sweep only follows unsubscribe links to public HTTPS addresses, never to private or internal networks.
 - **Every action is audited**, automatic or approved, with the reason and confidence.
 - **Keep is a signal.** Senders you keep are skipped in future runs.
 
