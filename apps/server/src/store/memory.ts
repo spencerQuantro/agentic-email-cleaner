@@ -22,6 +22,7 @@ export class MemoryStore implements Store {
     fixtures.activityRuns,
   );
   private kept = new Set<string>();
+  private sessionGeneration = 0;
 
   async getRules() {
     return structuredClone(this.rules);
@@ -121,6 +122,14 @@ export class MemoryStore implements Store {
 
   async keptSenders() {
     return [...this.kept];
+  }
+
+  async getSessionGeneration() {
+    return this.sessionGeneration;
+  }
+
+  async bumpSessionGeneration() {
+    return ++this.sessionGeneration;
   }
 
   private findRow(id: string) {

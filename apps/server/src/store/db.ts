@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { desc, eq, isNull } from "drizzle-orm";
+import { desc, eq, isNull, sql } from "drizzle-orm";
 import { fixtures, type ActivityRow, type ActivityRun, type Rules } from "@sweep/shared";
 import type { Db } from "../db/client";
 import { activityRows, activityRuns, reviewItems, senderFeedback, settings } from "../db/schema";
@@ -60,7 +60,13 @@ export class DbStore implements Store {
   private async settingsRow() {
     const row = await this.db.select().from(settings).where(eq(settings.id, 1)).get();
     if (row) return row;
-    const created = { id: 1, rules: fixtures.defaultRules, lastRunAt: null, lastRunStats: null };
+    const created = {
+      id: 1,
+      rules: fixtures.defaultRules,
+      lastRunAt: null,
+      lastRunStats: null,
+      sessionGeneration: 0,
+    };
     await this.db.insert(settings).values(created).onConflictDoNothing();
     return created;
   }
@@ -221,5 +227,20 @@ export class DbStore implements Store {
   async keptSenders() {
     const rows = await this.db.select().from(senderFeedback);
     return rows.map((r) => r.address);
+  }
+
+  async getSessionGeneration() {
+    return (await this.settingsRow()).sessionGeneration;
+  }
+
+  async bumpSessionGeneration() {
+    await this.settingsRow();
+    const row = await this.db
+      .update(settings)
+      .set({ sessionGeneration: sql`${settings.sessionGeneration} + 1` })
+      .where(eq(settings.id, 1))
+      .returning({ sessionGeneration: settings.sessionGeneration })
+      .get();
+    return row.sessionGeneration;
   }
 }
