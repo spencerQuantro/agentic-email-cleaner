@@ -59,6 +59,8 @@ Sweep is self-hosted: you bring your own Google OAuth client and Anthropic API k
 
 The server listens on `HOST`, which defaults to `127.0.0.1` so only your own machine can reach it. Set `HOST=0.0.0.0` only when other machines or containers need to connect, and keep `APP_PASSWORD` set when you do.
 
+Signing out signs out every device and browser that is signed in, so use it if you think someone else has your session. Your Gmail connection stays in place.
+
 Start with **Dry run** switched on in Rules & safety and check the Activity log before letting Sweep act for real.
 
 ### Docker
