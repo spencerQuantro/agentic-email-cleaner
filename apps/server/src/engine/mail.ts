@@ -1,3 +1,4 @@
+import { pinnedRequest, type PinnedRequest } from "../lib/pinned-request";
 import { checkHost, checkUrl, defaultResolver, type Resolver } from "../lib/safe-url";
 
 /** Everything Sweep knows about one sender, gathered from message metadata only. */
@@ -41,12 +42,14 @@ const MAX_REDIRECTS = 3;
 
 /**
  * Sends an RFC 8058 one-click unsubscribe request. The URL comes from the sender, so every hop
- * (including each redirect) must pass `checkUrl` and `checkHost` first. Never throws.
+ * (including each redirect) must pass `checkUrl` and `checkHost` first, and its connection is
+ * pinned to the address `checkHost` approved, so the host is never resolved a second time.
+ * Never throws.
  */
 export async function oneClickUnsubscribe(
   url: string | undefined,
   oneClick: boolean,
-  fetchImpl: typeof fetch = fetch,
+  request: PinnedRequest = pinnedRequest,
   lookup: Resolver = defaultResolver,
 ): Promise<UnsubscribeResult> {
   if (!url || !oneClick) return { ok: false, reason: "Sender has no one-click unsubscribe" };
@@ -58,15 +61,13 @@ export async function oneClickUnsubscribe(
       if (!checked.ok) return checked;
       const host = await checkHost(checked.url.hostname, lookup);
       if (!host.ok) return host;
-      const res = await fetchImpl(checked.url.href, {
-        method: "POST",
+      const res = await request(checked.url, host.address, {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: "List-Unsubscribe=One-Click",
-        redirect: "manual",
         signal,
       });
       if (res.status >= 300 && res.status < 400) {
-        const location = res.headers.get("location");
+        const location = res.location;
         if (
           !REDIRECT_STATUSES.has(res.status) ||
           !location ||
@@ -80,13 +81,15 @@ export async function oneClickUnsubscribe(
         current = new URL(location, checked.url).href;
         continue;
       }
-      return res.ok
+      return res.status >= 200 && res.status < 300
         ? { ok: true, method: "one-click" }
         : { ok: false, reason: `Unsubscribe endpoint returned ${res.status}` };
     }
   } catch (err) {
+    // Node's https aborts with an Error named AbortError, fetch-style code with a DOMException.
     const timedOut =
-      err instanceof DOMException && (err.name === "TimeoutError" || err.name === "AbortError");
+      signal.aborted ||
+      (err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError"));
     return {
       ok: false,
       reason: timedOut ? "Unsubscribe request timed out" : "Unsubscribe request failed",
