@@ -52,16 +52,33 @@ describe("isBlockedAddress", () => {
     "garbage",
     "",
     "[::1]",
+    "::127.0.0.1",
+    "::7f00:1",
+    "::ffff:0:7f00:1",
+    "::ffff:0:127.0.0.1",
+    "::169.254.169.254",
+    "192.0.0.1",
+    "192.0.0.255",
+    "198.18.0.1",
+    "198.19.255.255",
+    "0.255.255.255",
   ])("blocks %j", (ip) => {
     expect(isBlockedAddress(ip)).toBe(true);
   });
 
-  it.each(["172.32.0.1", "100.128.0.1", "93.184.216.34", "2606:4700::1111", "::ffff:5db8:d822"])(
-    "allows %j",
-    (ip) => {
-      expect(isBlockedAddress(ip)).toBe(false);
-    },
-  );
+  it.each([
+    "172.32.0.1",
+    "100.128.0.1",
+    "93.184.216.34",
+    "2606:4700::1111",
+    "::ffff:5db8:d822",
+    "192.0.1.1",
+    "198.17.255.255",
+    "198.20.0.1",
+    "::ffff:0:5db8:d822",
+  ])("allows %j", (ip) => {
+    expect(isBlockedAddress(ip)).toBe(false);
+  });
 });
 
 describe("checkHost", () => {
@@ -69,7 +86,14 @@ describe("checkHost", () => {
     const lookup = vi.fn();
     expect(await checkHost("[::1]", lookup)).toMatchObject({ ok: false });
     expect(await checkHost("10.0.0.5", lookup)).toMatchObject({ ok: false });
-    expect(await checkHost("93.184.216.34", lookup)).toEqual({ ok: true });
+    expect(await checkHost("93.184.216.34", lookup)).toEqual({
+      ok: true,
+      address: { address: "93.184.216.34", family: 4 },
+    });
+    expect(await checkHost("[2606:4700::1111]", lookup)).toEqual({
+      ok: true,
+      address: { address: "2606:4700::1111", family: 6 },
+    });
     expect(lookup).not.toHaveBeenCalled();
   });
 
@@ -97,6 +121,21 @@ describe("checkHost", () => {
 
   it("allows hosts that resolve only to public addresses", async () => {
     const lookup = async () => [{ address: "2606:4700::1111", family: 6 }];
-    expect(await checkHost("unsub.example", lookup)).toEqual({ ok: true });
+    expect(await checkHost("unsub.example", lookup)).toEqual({
+      ok: true,
+      address: { address: "2606:4700::1111", family: 6 },
+    });
+  });
+
+  it("returns the first resolved address once every address is public", async () => {
+    const lookup = vi.fn(async () => [
+      { address: "93.184.216.34", family: 4 },
+      { address: "2606:4700::1111", family: 6 },
+    ]);
+    expect(await checkHost("unsub.example", lookup)).toEqual({
+      ok: true,
+      address: { address: "93.184.216.34", family: 4 },
+    });
+    expect(lookup).toHaveBeenCalledTimes(1);
   });
 });
