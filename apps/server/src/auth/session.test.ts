@@ -6,6 +6,8 @@ import { FakeMail } from "../test/fakes";
 import type { SessionAuthConfig } from "./session";
 
 const config: SessionAuthConfig = { password: "hunter2", signingSecret: "secret", secure: false };
+// A Host and Origin that pass the cross-site checks for the default env.
+const sameSite = { Host: "localhost:8787", Origin: "http://localhost:5173" };
 
 function setup(auth: SessionAuthConfig | null = config) {
   const mail = new FakeMail();
@@ -18,13 +20,15 @@ function setup(auth: SessionAuthConfig | null = config) {
     getMail: async () => mail,
     session: async () => ({ mode: "demo", connected: true, email: "you@gmail.com" }),
     nextRunAt: () => null,
+    allowedOrigins: ["http://localhost:5173", "http://localhost:8787", "http://127.0.0.1:8787"],
+    allowedHosts: ["localhost:5173", "localhost:8787", "127.0.0.1:8787"],
     authRoutes,
     auth: auth ?? undefined,
   });
   const json = (path: string, init?: RequestInit) =>
     app.request(path, {
       ...init,
-      headers: { "Content-Type": "application/json", ...init?.headers },
+      headers: { "Content-Type": "application/json", ...sameSite, ...init?.headers },
     });
   const login = (password: string) =>
     json("/api/login", { method: "POST", body: JSON.stringify({ password }) });
@@ -59,7 +63,7 @@ describe("password protection", () => {
     expect(labels).toContain("GET /auth/google/callback");
 
     for (const { method, path } of routes) {
-      const res = await app.request(path, { method });
+      const res = await app.request(path, { method, headers: sameSite });
       expect(res.status, `${method} ${path}`).toBe(401);
       expect(await res.json()).toEqual({ error: expect.any(String) });
     }

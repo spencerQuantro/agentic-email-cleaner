@@ -8,14 +8,17 @@ import { createDb, runMigrations } from "./db/client";
 import { createClaudeClassifier } from "./engine/classifier";
 import { NoopMailProvider } from "./engine/mail";
 import { runSweep } from "./engine/run";
-import { loadEnv, missingLiveConfig } from "./env";
+import { allowedHosts, allowedOrigins, loadEnv, missingLiveConfig } from "./env";
 import { nextRunAt, Scheduler } from "./scheduler";
 import { DbStore } from "./store/db";
 import { MemoryStore } from "./store/memory";
 
 const env = loadEnv();
 
-function demoDeps(): AppDeps {
+/** Mode-specific deps; the cross-site allowlists come from the env for every mode. */
+type ModeDeps = Omit<AppDeps, "allowedOrigins" | "allowedHosts">;
+
+function demoDeps(): ModeDeps {
   const mail = new NoopMailProvider();
   return {
     store: new MemoryStore(),
@@ -25,7 +28,7 @@ function demoDeps(): AppDeps {
   };
 }
 
-async function liveDeps(): Promise<AppDeps> {
+async function liveDeps(): Promise<ModeDeps> {
   const missing = missingLiveConfig(env);
   if (missing.length) {
     throw new Error(
@@ -83,7 +86,13 @@ const auth = env.APP_PASSWORD
       secure: env.WEB_ORIGIN.startsWith("https:"),
     }
   : undefined;
-const app = createApp({ ...deps, webOrigin: env.WEB_ORIGIN, auth });
+const app = createApp({
+  ...deps,
+  webOrigin: env.WEB_ORIGIN,
+  allowedOrigins: allowedOrigins(env),
+  allowedHosts: allowedHosts(env),
+  auth,
+});
 
 // In production the server also serves the built web app (single container).
 if (env.WEB_DIST && existsSync(env.WEB_DIST)) {

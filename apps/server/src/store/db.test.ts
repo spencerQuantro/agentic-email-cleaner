@@ -100,17 +100,21 @@ describe("DbStore", () => {
       getMail: async () => mail,
       session: async () => ({ mode: "live", connected: true, email: "you@gmail.com" }),
       nextRunAt: () => null,
+      allowedOrigins: ["http://localhost:5173"],
+      allowedHosts: ["localhost:8787"],
       auth: { password: "hunter2", signingSecret: "secret", secure: false },
     });
+    // A Host and Origin that pass the cross-site checks.
+    const sameSite = { Host: "localhost:8787", Origin: "http://localhost:5173" };
     const login = await app.request("/api/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...sameSite },
       body: JSON.stringify({ password: "hunter2" }),
     });
     const cookie = login.headers.getSetCookie()[0]!.split(";")[0]!;
     const logout = await app.request("/api/logout", {
       method: "POST",
-      headers: { Cookie: cookie },
+      headers: { Cookie: cookie, ...sameSite },
     });
 
     expect(logout.status).toBe(200);
