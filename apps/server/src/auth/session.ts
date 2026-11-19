@@ -13,6 +13,12 @@ export interface SessionAuthConfig {
   secure: boolean;
 }
 
+/** The stored session generation. Bumping it revokes every issued cookie. */
+export interface SessionGeneration {
+  get(): Promise<number>;
+  bump(): Promise<number>;
+}
+
 const COOKIE = "sweep_session";
 const SESSION_SECONDS = 30 * 24 * 60 * 60;
 const MAX_FAILURES = 5;
@@ -34,15 +40,18 @@ function clientKey(c: Context) {
 }
 
 /** Password check, signed session cookie, and a per-IP limit on failed logins. */
-export function createSessionAuth(config: SessionAuthConfig) {
-  // Changing either the secret or the password invalidates every issued cookie.
-  const key = createHmac("sha256", config.signingSecret).update(config.password).digest("hex");
+export function createSessionAuth(config: SessionAuthConfig, generation: SessionGeneration) {
+  // Changing the secret, the password or the generation invalidates every issued cookie.
+  const key = async () =>
+    createHmac("sha256", config.signingSecret)
+      .update(`${config.password}:${await generation.get()}`)
+      .digest("hex");
   const expected = sha256(config.password);
   const cookieOptions = { path: "/", secure: config.secure };
   const failures = new Map<string, { count: number; resetAt: number }>();
 
   const signedIn = async (c: Context) => {
-    const value = await getSignedCookie(c, key, COOKIE);
+    const value = await getSignedCookie(c, await key(), COOKIE);
     if (!value) return false;
     const expiresAt = Number(value);
     return Number.isFinite(expiresAt) && expiresAt > Date.now();
@@ -70,7 +79,7 @@ export function createSessionAuth(config: SessionAuthConfig) {
       throw new HTTPException(401, { message: "Wrong password." });
     }
 
-    await setSignedCookie(c, COOKIE, String(now + SESSION_SECONDS * 1000), key, {
+    await setSignedCookie(c, COOKIE, String(now + SESSION_SECONDS * 1000), await key(), {
       ...cookieOptions,
       httpOnly: true,
       sameSite: "Lax",
@@ -78,7 +87,9 @@ export function createSessionAuth(config: SessionAuthConfig) {
     });
   };
 
-  const logout = (c: Context) => {
+  /** Clears the cookie; a signed-in caller also revokes every other session. */
+  const logout = async (c: Context) => {
+    if (await signedIn(c)) await generation.bump();
     deleteCookie(c, COOKIE, cookieOptions);
   };
 
